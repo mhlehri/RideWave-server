@@ -46,7 +46,7 @@ async function run() {
 
     try {
       app.get("/fourServices", async (req, res) => {
-        const services = servicesCollection.find().limit(4);
+        const services = servicesCollection.find().skip(4).limit(4);
         const results = await services.toArray();
         res.send(results);
       });
@@ -60,6 +60,18 @@ async function run() {
         const services = servicesCollection.find({ providerEmail: email });
         const results = await services.toArray();
         res.send(results);
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+
+    try {
+      app.get("/single/:id", async (req, res) => {
+        const id = req.params.id;
+        const result = await servicesCollection.findOne({
+          _id: new ObjectId(id),
+        });
+        res.send(result);
       });
     } catch (error) {
       console.log(error.message);
