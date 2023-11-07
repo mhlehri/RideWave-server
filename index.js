@@ -65,8 +65,9 @@ async function run() {
       console.log(error.message);
     }
 
+    //
     try {
-      app.get("/single/:id", async (req, res) => {
+      app.get("/details/:id", async (req, res) => {
         const id = req.params.id;
         const result = await servicesCollection.findOne({
           _id: new ObjectId(id),
@@ -79,7 +80,25 @@ async function run() {
 
     // Add Services
     try {
-    } catch (error) {}
+      app.post("/addServices", async (req, res) => {
+        const services = req.body;
+        const result = await servicesCollection.insertOne(services);
+        res.send(result);
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+    // Add Bookings
+    try {
+      app.post("/addServices", async (req, res) => {
+        const services = req.body;
+        const result = await servicesCollection.insertOne(services);
+        res.send(result);
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
