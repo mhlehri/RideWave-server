@@ -93,6 +93,20 @@ async function run() {
       console.log(error.message);
     }
 
+    // getting pending services
+    try {
+      app.get("/myPending/:email", async (req, res) => {
+        const email = req.params.email;
+        const booking = bookingsCollection.find({
+          providerEmail: email,
+        });
+        const result = await booking.toArray();
+        res.send(result);
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+
     // Add Services
     try {
       app.post("/addServices", async (req, res) => {
@@ -108,6 +122,30 @@ async function run() {
       app.post("/addBookings", async (req, res) => {
         const booking = req.body;
         const result = await bookingsCollection.insertOne(booking);
+        res.send(result);
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+    // remove Services
+    try {
+      app.delete("/services/:id", async (req, res) => {
+        const id = req.params.id;
+        const result = await bookingsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.send(result);
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+    // remove Bookings
+    try {
+      app.delete("/bookings/:id", async (req, res) => {
+        const id = req.params.id;
+        const result = await bookingsCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
         res.send(result);
       });
     } catch (error) {
