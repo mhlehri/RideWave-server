@@ -15,8 +15,7 @@ app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
 
-const uri =
-  "mongodb+srv://mahmudhassanlehri:mhlehri101@cluster0.yynznjj.mongodb.net/?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.yynznjj.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -27,6 +26,7 @@ const client = new MongoClient(uri, {
 });
 
 const servicesCollection = client.db("ServicesDB").collection("services");
+const bookingsCollection = client.db("ServicesDB").collection("bookings");
 
 async function run() {
   try {
@@ -44,6 +44,7 @@ async function run() {
       console.log(error.message);
     }
 
+    // getting popular services
     try {
       app.get("/fourServices", async (req, res) => {
         const services = servicesCollection.find().skip(4).limit(4);
@@ -54,6 +55,7 @@ async function run() {
       console.log(error.message);
     }
 
+    // getting my services
     try {
       app.get("/myServices/:email", async (req, res) => {
         const email = req.params.email;
@@ -65,13 +67,26 @@ async function run() {
       console.log(error.message);
     }
 
-    //
+    // getting single service
     try {
       app.get("/details/:id", async (req, res) => {
         const id = req.params.id;
         const result = await servicesCollection.findOne({
           _id: new ObjectId(id),
         });
+        res.send(result);
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+    // getting booked services
+    try {
+      app.get("/myBookings/:email", async (req, res) => {
+        const email = req.params.email;
+        const booking = bookingsCollection.find({
+          userEmail: email,
+        });
+        const result = await booking.toArray();
         res.send(result);
       });
     } catch (error) {
@@ -90,9 +105,9 @@ async function run() {
     }
     // Add Bookings
     try {
-      app.post("/addServices", async (req, res) => {
-        const services = req.body;
-        const result = await servicesCollection.insertOne(services);
+      app.post("/addBookings", async (req, res) => {
+        const booking = req.body;
+        const result = await bookingsCollection.insertOne(booking);
         res.send(result);
       });
     } catch (error) {
