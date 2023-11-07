@@ -97,9 +97,10 @@ async function run() {
     try {
       app.get("/myPending/:email", async (req, res) => {
         const email = req.params.email;
-        const booking = bookingsCollection.find({
+        const query = {
           providerEmail: email,
-        });
+        };
+        const booking = bookingsCollection.find(query);
         const result = await booking.toArray();
         res.send(result);
       });
