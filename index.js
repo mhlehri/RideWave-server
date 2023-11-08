@@ -66,7 +66,7 @@ async function run() {
     // getting popular services
     try {
       app.get("/fourServices", async (req, res) => {
-        const services = servicesCollection.find().skip(4).limit(4);
+        const services = servicesCollection.find().limit(4);
         const results = await services.toArray();
         res.send(results);
       });
@@ -79,6 +79,9 @@ async function run() {
       app.get("/myServices/:email", verifyToken, async (req, res) => {
         const email = req.params.email;
         console.log("owner", req.user, email, req.cookies);
+        if (email !== req.user.email) {
+          return res.status(403).send({ message: "forbidden access" });
+        }
         const services = servicesCollection.find({ providerEmail: email });
         const results = await services.toArray();
         res.send(results);
@@ -99,9 +102,22 @@ async function run() {
     } catch (error) {
       console.log(error.message);
     }
+    // getting single service
+    try {
+      app.get("/another", async (req, res) => {
+        const email = req.query.email;
+        const name = req.query.name;
+        const result = servicesCollection.find({ providerEmail: email });
+        const s = await result.toArray();
+        const find = s.filter((r) => r.serviceName !== name);
+        res.send(find);
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
     // getting booked services
     try {
-      app.get("/myBookings/:email", async (req, res) => {
+      app.get("/myBookings/:email", verifyToken, async (req, res) => {
         const email = req.params.email;
         const booking = bookingsCollection.find({
           userEmail: email,
@@ -115,7 +131,7 @@ async function run() {
 
     // getting pending services
     try {
-      app.get("/myPending/:email", async (req, res) => {
+      app.get("/myPending/:email", verifyToken, async (req, res) => {
         const email = req.params.email;
         const query = {
           providerEmail: email,
@@ -179,7 +195,7 @@ async function run() {
     } catch (error) {
       console.log(error.message);
     }
-    // update Bookings
+    // update services
     try {
       app.patch("/updateServices", async (req, res) => {
         const providerEmail = req.body.user;
@@ -195,6 +211,23 @@ async function run() {
           },
         };
         const result = await servicesCollection.updateOne(query, update);
+        res.send(result);
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+    try {
+      app.patch("/updateStatus", async (req, res) => {
+        const providerEmail = req.body.email;
+        const serviceName = req.body.service;
+        const userEmail = req.body.user;
+        const query = { providerEmail, userEmail, serviceName };
+        const update = {
+          $set: {
+            status: req.body?.status,
+          },
+        };
+        const result = await bookingsCollection.updateOne(query, update);
         res.send(result);
       });
     } catch (error) {
@@ -242,5 +275,5 @@ app.get("/", async (req, res) => {
 });
 
 app.listen(port, (err) => {
-  console.log("ler");
+  console.log("lehri");
 });
