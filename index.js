@@ -3,7 +3,7 @@ const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-
+var moment = require("moment");
 require("dotenv").config();
 
 const app = express();
@@ -14,10 +14,11 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["https://ridewave1.netlify.app"],
     credentials: true,
   })
 );
+
 app.use(cookieParser());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.yynznjj.mongodb.net/?retryWrites=true&w=majority`;
@@ -50,7 +51,7 @@ const verifyToken = (req, res, next) => {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     // Getting All Services
     try {
@@ -78,7 +79,6 @@ async function run() {
     try {
       app.get("/myServices/:email", verifyToken, async (req, res) => {
         const email = req.params.email;
-        console.log("owner", req.user, email, req.cookies);
         if (email !== req.user.email) {
           return res.status(403).send({ message: "forbidden access" });
         }
@@ -168,7 +168,13 @@ async function run() {
       app.post("/logout", async (req, res) => {
         const user = req.body;
         console.log("logged out");
-        res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+        res
+          .clearCookie("token", {
+            maxAge: 0,
+            secure: process.env.NODE_ENV === "production" ? true : false,
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+          })
+          .send({ success: true });
       });
     } catch (error) {
       console.log(error.message);
@@ -198,9 +204,10 @@ async function run() {
     // update services
     try {
       app.patch("/updateServices", async (req, res) => {
-        const providerEmail = req.body.user;
-        const query = { providerEmail };
-        console.log(providerEmail);
+        const id = req.body.id;
+
+        const query = { _id: new ObjectId(id) };
+
         const update = {
           $set: {
             serviceImage: req.body?.serviceImage,
@@ -260,10 +267,6 @@ async function run() {
     }
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
   } finally {
   }
 }
